@@ -4,6 +4,7 @@ import { submitTask } from '../../api/submissions';
 const SubmitTaskModal = ({ task, onClose, onSubmitted }) => {
   const [file, setFile]   = useState(null);
   const [notes, setNotes] = useState('');
+  const[loading, setLoading] = useState(false);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -14,13 +15,16 @@ const SubmitTaskModal = ({ task, onClose, onSubmitted }) => {
     const formData = new FormData();
     if (file) formData.append('file', file);
     formData.append('notes', notes);
+    setLoading(true);
     try {
       await submitTask(task._id, formData);
       onSubmitted();
       onClose();
     } catch (err) {
       alert(err.response?.data?.message || 'Submission failed');
-    }
+    }finally {
+    setLoading(false);
+  }
   };
 
   return (
@@ -78,13 +82,13 @@ const SubmitTaskModal = ({ task, onClose, onSubmitted }) => {
 
           
           <div className="flex justify-end gap-2.5 pt-1 border-t border-border mt-1">
-            <button type="button" onClick={onClose}
+            <button type="button" onClick={onClose} disabled={loading}
               className="px-5 py-2.5 bg-bg-input text-text-muted border border-border rounded-lg text-sm font-medium cursor-pointer hover:bg-bg-hover hover:text-text-primary transition-all font-sans">
               Cancel
             </button>
-            <button type="submit"
-              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white cursor-pointer btn-gradient border-none font-sans">
-              Submit Task
+            <button type="submit" disabled={loading}
+              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white cursor-pointer btn-gradient border-none font-sans disabled:opacity-60 disabled:cursor-not-allowed">
+              {loading ? 'Submitting...' : 'Submit Task'}
             </button>
           </div>
         </form>

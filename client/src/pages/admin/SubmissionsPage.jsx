@@ -12,6 +12,8 @@ const REVIEW_STATUS_CLASS = {
 const SubmissionsPage = () => {
   const [submissions, setSubmissions] = useState([]);
   const [reviewTarget, setReviewTarget] = useState(null);
+  const [sortField, setSortField] = useState('createdAt');
+  const [sortDirection, setSortDirection] = useState('desc');
 
   const loadSubmissions = async () => {
     try {
@@ -19,6 +21,15 @@ const SubmissionsPage = () => {
       setSubmissions(data);
     } catch {
       alert('Failed to load submissions');
+    }
+  };
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
     }
   };
 
@@ -30,6 +41,33 @@ const SubmissionsPage = () => {
 
   const thCls = 'text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.7px] text-text-faint border-b border-border whitespace-nowrap';
   const tdCls = 'px-5 py-4 border-b border-border align-middle';
+
+  const sortedSubmissions = [...submissions].sort((a, b) => {
+    let aVal;
+    let bVal;
+
+    switch (sortField) {
+      case 'task':
+        aVal = a.taskId?.title || '';
+        bVal = b.taskId?.title || '';
+        break;
+      case 'talent':
+        aVal = a.talentId?.name || '';
+        bVal = b.talentId?.name || '';
+        break;
+      case 'reviewStatus':
+        aVal = a.reviewStatus || '';
+        bVal = b.reviewStatus || '';
+        break;
+      default:
+        aVal = new Date(a.createdAt || 0);
+        bVal = new Date(b.createdAt || 0);
+    }
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   return (
     <div className="flex min-h-screen bg-bg-dark">
@@ -77,18 +115,25 @@ const SubmissionsPage = () => {
               <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr className="bg-bg-surface">
-                    <th className={thCls}>Task</th>
-                    <th className={thCls}>Talent</th>
+                    <th className={`${thCls} cursor-pointer`} onClick={() => handleSort('task')}>
+                      Task {sortField === 'task' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                    </th>
+                    <th className={`${thCls} cursor-pointer`} onClick={() => handleSort('talent')}>
+                      Talent {sortField === 'talent' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                    </th>
                     <th className={thCls}>Notes</th>
                     <th className={thCls}>File</th>
-                    
-                    <th className={thCls}>Submitted</th>
-                    <th className={thCls}>Review Status</th>
+                    <th className={`${thCls} cursor-pointer`} onClick={() => handleSort('createdAt')}>
+                      Submitted {sortField === 'createdAt' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                    </th>
+                    <th className={`${thCls} cursor-pointer`} onClick={() => handleSort('reviewStatus')}>
+                      Review Status {sortField === 'reviewStatus' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                    </th>
                     <th className={thCls}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {submissions.map((sub) => (
+                  {sortedSubmissions.map((sub) => (
                     <tr key={sub._id} className="border-b border-border last:border-0 hover:bg-bg-hover transition-colors">
 
                       {/* Task */}

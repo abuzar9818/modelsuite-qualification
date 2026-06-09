@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { deleteTask } from '../../api/tasks';
 
 /* ── SVG Action Icons ── */
@@ -42,6 +43,17 @@ const STATUS_CLASS = {
 };
 
 const TasksTable = ({ tasks, onEdit, onRefresh }) => {
+    const [sortField, setSortField] = useState('createdAt');
+    const [sortDirection, setSortDirection] = useState('desc');
+
+    const handleSort = (field) => {
+      if (sortField === field) {
+        setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      } else {
+        setSortField(field);
+        setSortDirection('asc');
+      }
+    };
 
   const handleDelete = async (id) => {
     try {
@@ -51,6 +63,37 @@ const TasksTable = ({ tasks, onEdit, onRefresh }) => {
       alert('Failed to delete task');
     }
   };
+
+  const sortedTasks = [...tasks].sort((a, b) => {
+    let aVal;
+    let bVal;
+
+    switch (sortField) {
+      case 'title':
+        aVal = a.title || '';
+        bVal = b.title || '';
+        break;
+      case 'status':
+        aVal = a.status || '';
+        bVal = b.status || '';
+        break;
+      case 'assignedTo':
+        aVal = a.assignedTo?.name || '';
+        bVal = b.assignedTo?.name || '';
+        break;
+      case 'dueDate':
+        aVal = new Date(a.dueDate || 0);
+        bVal = new Date(b.dueDate || 0);
+        break;
+      default:
+        aVal = new Date(a.createdAt || 0);
+        bVal = new Date(b.createdAt || 0);
+    }
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   if (tasks.length === 0) {
     return (
@@ -70,16 +113,26 @@ const TasksTable = ({ tasks, onEdit, onRefresh }) => {
       <table className="w-full border-collapse" style={{ fontSize: '13.5px' }}>
         <thead>
           <tr>
-            <th className="table-th">Title</th>
-            <th className="table-th">Status</th>
-            <th className="table-th">Assigned To</th>
-            <th className="table-th">Due Date</th>
-            <th className="table-th">Created</th>
+            <th className="table-th cursor-pointer" onClick={() => handleSort('title')}>
+              Title {sortField === 'title' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+            </th>
+            <th className="table-th cursor-pointer" onClick={() => handleSort('status')}>
+              Status {sortField === 'status' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+            </th>
+            <th className="table-th cursor-pointer" onClick={() => handleSort('assignedTo')}>
+              Assigned To {sortField === 'assignedTo' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+            </th>
+            <th className="table-th cursor-pointer" onClick={() => handleSort('dueDate')}>
+              Due Date {sortField === 'dueDate' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+            </th>
+            <th className="table-th cursor-pointer" onClick={() => handleSort('createdAt')}>
+              Created {sortField === 'createdAt' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+            </th>
             <th className="table-th">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {tasks.map((task, i) => (
+          {sortedTasks.map((task, i) => (
             <tr key={task._id}
               className="table-row table-row-animate"
               style={{ animationDelay: `${i * 0.05}s` }}>
